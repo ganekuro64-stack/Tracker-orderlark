@@ -1,0 +1,33 @@
+name: Cập nhật trạng thái đơn
+
+on:
+  schedule:
+    # 00:00 UTC = 07:00 giờ Việt Nam, mỗi ngày
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}   # cho phép bấm "Run workflow" để chạy tay
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Kiểm tra & ghi trạng thái
+        env:
+          LARK_APP_ID: ${{ secrets.LARK_APP_ID }}
+          LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET }}
+          LARK_SPREADSHEET_TOKEN: ${{ secrets.LARK_SPREADSHEET_TOKEN }}
+          TRACK17_API_KEY: ${{ secrets.TRACK17_API_KEY }}
+          # Tuỳ chọn (Settings > Secrets and variables > Actions > tab Variables)
+          LARK_SHEET_NAME: ${{ vars.LARK_SHEET_NAME }}
+          SKIP_OLDER_THAN_DAYS: ${{ vars.SKIP_OLDER_THAN_DAYS || '30' }}
+          STUCK_DAYS: ${{ vars.STUCK_DAYS || '4' }}
+          CARRIER_HINTS: ${{ vars.CARRIER_HINTS || '{}' }}
+        run: python tracker.py
